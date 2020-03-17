@@ -1,1 +1,1 @@
-# AlopexStudio.github.io
+Гоглу слава!
