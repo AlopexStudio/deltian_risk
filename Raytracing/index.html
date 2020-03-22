@@ -1,0 +1,237 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+ <meta name="viewport" content="width=device-width,user-scalable=no"/>
+ <title></title>
+</head>
+<body>
+
+    <script type="text/javascript" src="pointjs_0.2.0.9.js"></script>
+
+    <script type="text/javascript">
+
+        var Pjs = new PointJS(600, 300, {backgroundColor: "#262626"});
+        var Game = Pjs.game;
+        var math = Pjs.math;
+        var Point = Pjs.vector.point;
+        //var PointPlus = Pjs.vector.pointPlus;
+        //var Divide = Pjs.vector.pointDiv;
+        //var Distance = Pjs.vector.getDistance;
+        var RotatePoint = Pjs.vector.getPointAngle;
+        var GetMid = Pjs.vector.getMidPoint;
+        var LampsCount = Point(60, 30);
+        var LampSize = 10;
+        var MonitorSize = Point(14, 14);
+
+        var MinDistance = 10000;
+
+        var Lamps = [];
+        for (var y = 0; y < LampsCount.y; y++)
+        {
+            for (var x = 0; x < LampsCount.x; x++)
+            {
+                Lamps.push(Game.newImageObject(
+                { 
+                    file : "TexOff.png", 
+                    x : x * LampSize, 
+                    y : y * LampSize, 
+                    w : LampSize, 
+                    h : LampSize
+                }));
+            }
+        }
+
+        var LampsLight = [];
+        for (var y = 0; y < LampsCount.y; y++)
+        {
+            for (var x = 0; x < LampsCount.x; x++)
+            {
+                LampsLight.push(Game.newImageObject(
+                { 
+                    file : "TexOn.png", 
+                    x : x * LampSize, 
+                    y : y * LampSize, 
+                    w : LampSize, 
+                    h : LampSize,
+                    alpha : 0
+                }));
+            }
+        }
+
+        function Raytracing(A, B, x, TexInd)
+        {
+            //console.log(TexInd);
+            var XCoord = x * (MonitorSize.x / LampsCount.x) - LampsCount.x * (MonitorSize.x / LampsCount.x) / 2;
+            if ((Rects[A].x >= XCoord && Rects[B].x <= XCoord) || (Rects[A].x <= XCoord && Rects[B].x >= XCoord))
+            {
+                // y = kx + a
+                //console.log("Кря");
+                var Coof = (Rects[A].y - Rects[B].y) / (Rects[A].x - Rects[B].x);
+                var Shift = (Rects[A].x * Rects[B].y - Rects[B].x * Rects[A].y) / (Rects[A].x - Rects[B].x);
+                var YCoord = Coof * XCoord + Shift;
+                if (MinDistance > YCoord)
+                {
+                    MinDistance = YCoord;
+                    //var Value = Math.abs(Rects[A].x - Rects[B].x) / Distance(Rects[A], Rects[B]);
+                    var Value = Math.cos(Math.atan(Coof));
+                    //var Value = 1;
+                    if (YCoord <= 1)
+                    {
+                        for (var y = 0; y < LampsCount.y; y++)
+                        {
+                            LampsLight[x + y * LampsCount.x].setAlpha(Value);
+                            LampsLight[x + y * LampsCount.x].setImage(Tex(TexInd));
+                            //if (LampsLight[x + y * LampsCount.x].getAlpha() < Value)
+                            //{
+                            //    LampsLight[x + y * LampsCount.x].setAlpha(Value);
+                            //    LampsLight[x + y * LampsCount.x].setImage(Tex(TexInd));
+                            //}
+                        }
+                    }
+                    else if (YCoord <= 3)
+                    {
+                        //for (var y = 1; y < LampsCount.y - 1; y++)
+                        //{
+                        //    LampsLight[x + y * LampsCount.x].setAlpha(Value);
+                        //}
+                        ////LampsLight[x + y * LampsCount.x].setAlpha(1);
+                        //LampsLight[x].setAlpha((1 - (YCoord - 1) / 2) * Value);
+                        //LampsLight[x + (LampsCount.y - 1) * LampsCount.x].setAlpha((1 - (YCoord - 1) / 2) * Value);
+                        Persp(1, 1, x, Value, YCoord, TexInd);
+                    }
+                    else if (YCoord <= 5)
+                    {
+                        Persp(3, 2, x, Value, YCoord, TexInd);
+                    }
+                    else if (YCoord <= 7)
+                    {
+                        Persp(5, 3, x, Value, YCoord, TexInd);
+                    }
+                    else if (YCoord <= 9)
+                    {
+                        Persp(7, 4, x, Value, YCoord, TexInd);
+                    }
+                    else if (YCoord <= 11)
+                    {
+                        Persp(9, 5, x, Value, YCoord, TexInd);
+                    }
+                }
+                /*
+                else
+                {
+                    for (var y = 0; y < LampsCount.y; y++)
+                    {
+                        LampsLight[x + y * LampsCount.x].setAlpha(0);
+                    }
+                }
+                */
+            }
+        }
+
+        function Persp(A, B, x, Value, YCoord, TexInd)
+        {
+            //console.log(Z + " / " + (LampsCount.y - Z));
+            for (var y = B; y < LampsCount.y - B; y++)
+            {
+                //console.log(y);
+                //console.log("Текущая: " + (LampsLight[x + (B - 1) * LampsCount.x].getAlpha()) + ", предлагаемая: " + Value);
+                //LampsLight[x + (B - 1) * LampsCount.x].setAlpha(Value);
+                //LampsLight[x + y * LampsCount.x].setAlpha(1);
+                LampsLight[x + y * LampsCount.x].setAlpha(Value);
+                LampsLight[x + y * LampsCount.x].setImage(Tex(TexInd));
+                //if (LampsLight[x + y * LampsCount.x].getAlpha() < Value)
+                //{
+                //    LampsLight[x + y * LampsCount.x].setAlpha(Value);
+                //    LampsLight[x + y * LampsCount.x].setImage(Tex(TexInd));
+                //}
+            }
+            //LampsLight[x + (B - 1) * LampsCount.x].setAlpha((1 - (YCoord - A) / 2) * Value);
+            //LampsLight[x + (LampsCount.y - B) * LampsCount.x].setAlpha((1 - (YCoord - A) / 2) * Value);
+            LampsLight[x + (B - 1) * LampsCount.x].setAlpha((1 - (YCoord - A) / 2) * Value);
+            LampsLight[x + (B - 1) * LampsCount.x].setImage(Tex(TexInd));
+            //if (LampsLight[x + (B - 1) * LampsCount.x].getAlpha() < (1 - (YCoord - A) / 2) * Value)
+            //{
+            //    LampsLight[x + (B - 1) * LampsCount.x].setAlpha((1 - (YCoord - A) / 2) * Value);
+            //    LampsLight[x + (B - 1) * LampsCount.x].setImage(Tex(TexInd));
+            //}
+            LampsLight[x + (LampsCount.y - B) * LampsCount.x].setAlpha((1 - (YCoord - A) / 2) * Value);
+            LampsLight[x + (LampsCount.y - B) * LampsCount.x].setImage(Tex(TexInd));
+            //if (LampsLight[x + (LampsCount.y - B) * LampsCount.x].getAlpha() < (1 - (YCoord - A) / 2) * Value)
+            //{
+            //    LampsLight[x + (LampsCount.y - B) * LampsCount.x].setAlpha((1 - (YCoord - A) / 2) * Value);
+            //    LampsLight[x + (LampsCount.y - B) * LampsCount.x].setImage(Tex(TexInd));
+            //}
+        }
+
+        function Tex(TexInd)
+        {
+            switch(TexInd)
+            {
+                case 0:
+                    return "TexOn.png";
+                case 1:
+                    return "TexOn2.png";
+                default:
+                    return "TexOn.png";
+            }
+        }
+
+        function RotateLine(A, B, Angle)
+        {
+            var Mid = GetMid(Rects[0], Rects[1]);
+            Rects[A] = RotatePoint(Rects[A], Mid, Angle);
+            Rects[B] = RotatePoint(Rects[B], Mid, Angle);
+        }
+
+        function RotateRect(A, B, C, D, Angle)
+        {
+            var Mid = Point((Rects[A].x + Rects[B].x + Rects[C].x + Rects[D].x) / 4, (Rects[A].y + Rects[B].y + Rects[C].y + Rects[D].y) / 4);
+            Rects[A] = RotatePoint(Rects[A], Mid, Angle);
+            Rects[B] = RotatePoint(Rects[B], Mid, Angle);
+            Rects[C] = RotatePoint(Rects[C], Mid, Angle);
+            Rects[D] = RotatePoint(Rects[D], Mid, Angle);
+        }
+
+        var Rects = [];
+        Rects.push(Point(3, 5));
+        Rects.push(Point(-4, 5));
+        Rects.push(Point(3, 12));
+        Rects.push(Point(-4, 12));
+
+        Game.newLoop("GameLoop", function()
+        {
+            // Rotate object
+            //RotateLine(0, 1, 1);
+            //RotateLine(2, 3, 1);
+            RotateRect(0, 1, 2, 3, 1);
+
+            // Ray tracing
+            for (var x = 0; x < LampsCount.x; x++)
+            {
+                for (var y = 0; y < LampsCount.y; y++)
+                {
+                    LampsLight[x + y * LampsCount.x].setAlpha(0);
+                }
+                MinDistance = 10000;
+                Raytracing(0, 1, x, 0);
+                Raytracing(2, 3, x, 1);
+                Raytracing(0, 2, x, 0);
+                Raytracing(1, 3, x, 0);
+            }
+
+            // Drawing
+            for (var x = 0; x < Lamps.length; x++)
+            {
+                Lamps[x].draw();
+                LampsLight[x].draw();
+            }
+        })
+
+        Game.setLoop("GameLoop");
+        Game.start();
+
+    </script>
+
+</body>
+</html>
